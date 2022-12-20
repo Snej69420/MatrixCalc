@@ -22,12 +22,40 @@ Matrix::Matrix(int row, int column){
     }
 }
 
+int Matrix::biggestElement() {
+    int size = 0;
+    std::string temp;
+    for (int r = 0; r < rowNum; r++) {
+        for (int c = 0; c < columnNum; c++) {
+            temp = std::to_string(elements[r][c]);
+            if(temp.size() > size){
+                size = temp.size();
+            }
+        }
+    }
+    return size;
+}
+
 void Matrix::print() {
+    int size = biggestElement();
+    int remaining = 0;
+    std::string temp;
     for (int r = 0; r < rowNum; r++) {
         cout << "| ";
         for (int c = 0; c < columnNum; c++) {
+            temp = std::to_string(elements[r][c]);
+            remaining = size - temp.size();
+            for(int k = 0; k < remaining/2; k++){
+                cout << " ";
+            }
             cout << elements[r][c];
             cout << " ";
+            for(int k = 0; k < remaining/2; k++){
+                cout << " ";
+            }
+            if(remaining/2 == 0 && remaining != 0){
+                cout << " ";
+            }
 
         }
         cout << "|" << endl;

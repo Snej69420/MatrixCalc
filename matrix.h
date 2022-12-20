@@ -75,6 +75,8 @@ public:
 
 
 private:
+    int biggestElement();
+
     vector<vector<double>> elements;
     int rowNum;
     int columnNum;
