@@ -59,7 +59,7 @@ public:
     double inproduct(const Matrix& a);
     double inproduct(const Matrix& a, const Matrix& b);
     double inproduct(vector<double> a, vector<double> b);
-    Matrix power(double b);
+    Matrix power(unsigned int b);
 
 
 

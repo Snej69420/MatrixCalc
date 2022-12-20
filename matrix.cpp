@@ -332,18 +332,25 @@ double Matrix::inproduct(const Matrix& a, const Matrix& b){
 
 double Matrix::inproduct(vector<double> a, vector<double> b) {
     if(a.size() != b.size()){return {};}
-    double res;
+    double res = 0;
     for(int e = 0; e < a.size(); e++){
         res += a[e]*b[e];
     }
     return res;
 }
 
-Matrix Matrix::power(double b){
+Matrix Matrix::power(unsigned int b){
     if(!isSquare()){return {};}
+    Matrix mult = *this;
     Matrix res = *this;
+    if(isIdentity()){return res;}
     if(b == 0){
         res.makeIdentity();
         return res;
     }
+    for(int t = 0; t < b; t++){
+        res = mult*res;
+    }
+    return res;
+
 }
