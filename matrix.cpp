@@ -3,6 +3,7 @@
 //
 
 #include "matrix.h"
+
 Matrix::Matrix() {
     rowNum = 0;
     columnNum = 0;
@@ -350,6 +351,82 @@ Matrix Matrix::power(unsigned int b){
     }
     for(int t = 0; t < b; t++){
         res = mult*res;
+    }
+    return res;
+
+}
+
+int Matrix::findZerosRow() {
+    int e = -1;
+    int zeros = 0;
+    for(int r = 0; r < rowNum; r++){
+        int temp = 0;
+        for(int c = 0; c < columnNum; c++){
+            if(elements[r][c] == 0){temp++;}
+        }
+        if(temp > zeros){zeros = temp; e = r;}
+    }
+    return e;
+}
+
+int Matrix::findZerosColumn() {
+    int e = -1;
+    int zeros = 0;
+    for(int c = 0; c < columnNum; c++){
+        int temp = 0;
+        for(int r = 0; r < rowNum; r++){
+            if(elements[r][c] == 0){temp++;}
+        }
+        if(temp > zeros){zeros = temp; e = c;}
+    }
+    return e;
+}
+
+Matrix Matrix::createMinor(int r, int c) {
+    Matrix minor = Matrix(rowNum-1, columnNum-1);
+    for(int r0 = 0; r0 < rowNum; r0++){
+        for(int c0 = 0; c0 < columnNum; c0++){
+            if(c == c0 || r == r0){ continue;}
+            int r1 = r0;
+            int c1 = c0;
+            if(r0 > r){r1--;}
+            if(c0 > c){c1--;}
+            minor.elements[r1][c1] = elements[r0][c0];
+        }
+    }
+    return minor;
+}
+
+double Matrix::determinant() {
+    if(!isSquare()){return {};}
+    double res = 0;
+    if(isDiagonal() || isUpperTriangular() || isLowerTriangular()){
+        vector<double> diagonal = getDiagonal();
+        res = diagonal[0];
+        for(int e = 1; e < diagonal.size(); e++){
+            res *= diagonal[e];
+        }
+        return res;
+    }
+    if(rowNum == 2 & columnNum == 2){
+        return elements[0][0]*elements[1][1]-elements[1][0]*elements[0][1];
+    }
+    int r = findZerosRow();
+    int c = findZerosColumn();
+    vector<double> r0, c0;
+    r0 = getRow(r); c0 = getColumn(c);
+    bool row = true;
+    if(count(r0.begin(), r0.end(), 0) < count(c0.begin(), c0.end(), 0)){
+        row = false;
+    }
+    if(row){
+        for(int e = 0; e < r0.size(); e++){
+            res += elements[r][e]*pow(-1, r+e)* createMinor(r, e).determinant();
+        }
+        return res;
+    }
+    for(int e = 0; e < c0.size(); e++){
+        res += elements[e][c]*pow(-1, c+e)* createMinor(e,c).determinant();
     }
     return res;
 

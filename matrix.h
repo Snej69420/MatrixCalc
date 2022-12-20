@@ -8,6 +8,10 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <algorithm>
+#include <cmath>
+
+
 using std::cout;
 using std::endl;
 
@@ -60,6 +64,13 @@ public:
     double inproduct(const Matrix& a, const Matrix& b);
     double inproduct(vector<double> a, vector<double> b);
     Matrix power(unsigned int b);
+
+    int findZerosRow();
+    int findZerosColumn();
+
+    Matrix createMinor(int r, int c);
+
+    double determinant();
 
 
 
