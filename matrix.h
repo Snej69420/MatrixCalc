@@ -8,8 +8,10 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <algorithm>
 #include <cmath>
+#include "json.hpp"
 
 
 using std::cout;
@@ -21,6 +23,7 @@ class Matrix {
 public:
     Matrix();
     Matrix(int rows, int columns);
+    Matrix(std::string json);
 
     void print();
 
@@ -28,6 +31,7 @@ public:
     void setRow(int r, vector<double> row);
     void setColumn(int c, vector<double> column);
     void setDiagonal(vector<double> diagonal);
+    void setMatrix(vector<vector<double>> matrix);
     void makeIdentity();
 
     vector<double> getRow(int r) const;

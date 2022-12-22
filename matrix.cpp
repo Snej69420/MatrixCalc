@@ -22,6 +22,32 @@ Matrix::Matrix(int row, int column){
     }
 }
 
+Matrix::Matrix(std::string json) {
+    std::ifstream input(json); // lees de inputfile
+    nlohmann::json j;
+    input >> j;
+    if(j["type"] != "matrix"){
+        return;
+    }
+    rowNum = j["rows"];
+    columnNum = j["columns"];
+    vector<double> t0(columnNum, 0);
+    elements = vector<vector<double>>(rowNum, t0);
+    isVector = false;
+    if(rowNum == 1 || columnNum == 1){isVector = true;}
+    int r = 0;
+    int c = 0;
+    for(auto e : j["matrix"]){
+        c = 0;
+        for(auto e0 : e){
+            elements[r][c] = e0;
+            c++;
+        }
+        r++;
+    }
+    return;
+}
+
 int Matrix::biggestElement() {
     int size = 0;
     std::string temp;
@@ -184,6 +210,18 @@ void Matrix::setRow(int r, vector<double> row) {
     for(int c = 0; c < columnNum; c++){
         if(c == row.size()){ return;}
         elements[r][c]= row[c];
+    }
+}
+
+void Matrix::setMatrix(vector<vector<double>> matrix) {
+    if(matrix.size() != rowNum){ return;}
+    for(auto i : matrix){
+        if(i.size() != columnNum){ return;}
+    }
+    for(int r = 0; r < rowNum; r++){
+        for(int c = 0; c < columnNum; c++){
+            elements[r][c] = matrix[r][c];
+        }
     }
 }
 
