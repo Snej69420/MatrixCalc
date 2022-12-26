@@ -4,12 +4,8 @@
 int main() {
     Matrix a = Matrix("matrices/m1.json");
     a.print();
-    /*
-    Matrix a = Matrix(3,3);
-    a.setRow(0,{420,420,420});
-    a.setRow(1,{6,6,6});
-    a.setRow(2, {69,69,69});
-    a.print();
-    cout << a.determinant() << endl;
-     */
+    Matrix b = Matrix(3,1);
+    b.setColumn(0, {5,4,8});
+    b.print();
+    a.Gauss_Jordan(b);
 }

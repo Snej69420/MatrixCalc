@@ -48,12 +48,21 @@ Matrix::Matrix(std::string json) {
     return;
 }
 
-int Matrix::biggestElement() {
-    int size = 0;
+bool Matrix::isEmpty() {
+    if(columnNum == 0 || rowNum == 0){
+        return true;
+    }
+    return false;
+}
+
+unsigned int Matrix::biggestElement() {
+    unsigned int size = 0;
     std::string temp;
     for (int r = 0; r < rowNum; r++) {
         for (int c = 0; c < columnNum; c++) {
-            temp = std::to_string(elements[r][c]);
+            std::ostringstream oss;
+            oss << std::setprecision(8) << std::noshowpoint << elements[r][c];
+            temp = oss.str();
             if(temp.size() > size){
                 size = temp.size();
             }
@@ -62,29 +71,71 @@ int Matrix::biggestElement() {
     return size;
 }
 
+void Matrix::printHelp(int size, int r, Matrix a, int sizeA){
+    int remaining = 0;
+    std::string temp;
+    cout << "| ";
+    for (int c = 0; c < columnNum; c++) {
+        std::ostringstream oss;
+        oss << std::setprecision(8) << std::noshowpoint << elements[r][c];
+        temp = oss.str();
+        remaining = size - temp.size();
+        for(int k = 0; k < remaining/2; k++){
+            cout << " ";
+        }
+        cout << elements[r][c];
+        cout << " ";
+        for(int k = 0; k < remaining/2; k++){
+            cout << " ";
+        }
+        if(remaining%2 == 1){
+            cout << " ";
+        }
+
+    }
+    cout << "|";
+    if(a.isEmpty()){ return;}
+    cout << " ";
+    for (int c = 0; c < a.columnNum; c++) {
+        std::ostringstream oss;
+        oss << std::setprecision(8) << std::noshowpoint << a.elements[r][c];
+        temp = oss.str();
+        remaining = sizeA - temp.size();
+        for(int k = 0; k < remaining/2; k++){
+            cout << " ";
+        }
+        cout << a.elements[r][c];
+        cout << " ";
+        for(int k = 0; k < remaining/2; k++){
+            cout << " ";
+        }
+        if(remaining%2 == 1){
+            cout << " ";
+        }
+    }
+    cout << "|";
+
+}
+
 void Matrix::print() {
     int size = biggestElement();
     int remaining = 0;
     std::string temp;
     for (int r = 0; r < rowNum; r++) {
-        cout << "| ";
-        for (int c = 0; c < columnNum; c++) {
-            temp = std::to_string(elements[r][c]);
-            remaining = size - temp.size();
-            for(int k = 0; k < remaining/2; k++){
-                cout << " ";
-            }
-            cout << elements[r][c];
-            cout << " ";
-            for(int k = 0; k < remaining/2; k++){
-                cout << " ";
-            }
-            if(remaining/2 == 0 && remaining != 0){
-                cout << " ";
-            }
+        printHelp(size, r);
+        cout << endl;
+    }
+    cout << endl;
+}
 
-        }
-        cout << "|" << endl;
+void Matrix::print(Matrix a) {
+    int size = biggestElement();
+    int remaining = 0;
+    int sizeA = a.biggestElement();
+    std::string temp;
+    for (int r = 0; r < rowNum; r++) {
+        printHelp(size, r, a, sizeA);
+        cout << endl;
     }
     cout << endl;
 }
@@ -186,6 +237,13 @@ bool Matrix::isIdentity() {
     return true;
 }
 
+bool Matrix::isNullRow(vector<double> r) {
+    for(int e = 0; e < r.size(); e++){
+        if(r[e] != 0){return false;}
+    }
+    return true;
+}
+
 void Matrix::set(int r, int c, double value) {
     if(r >= rowNum || c >= columnNum){ return;}
     elements[r][c] = value;
@@ -252,9 +310,9 @@ vector<double> Matrix::getDiagonal() const{
 }
 
 vector<double> Matrix::getRow(int r) const{
-    if(r >= columnNum){return {};}
+    if(r >= rowNum){return {};}
     vector<double> res(columnNum);
-    for(int c = 0; c < rowNum; c++){
+    for(int c = 0; c < columnNum; c++){
         res[c] = elements[r][c];
     }
     return res;
@@ -496,4 +554,75 @@ double Matrix::determinant() {
     }
     return res;
 
+}
+
+void Matrix::swapRows(int r0, int r1){
+    vector<double> temp = getRow(r0);
+    setRow(r0, getRow(r1));
+    setRow(r1, temp);
+}
+
+vector<double> Matrix::addingRows(vector<double> r0, vector<double> r1) {
+    if(r0.size() != r1.size()){return {};}
+    vector<double> temp(r0.size(), 0);
+    for(int e = 0; e < r0.size(); e++){
+        temp[e] = r0[e] + r1[e];
+    }
+    return temp;
+}
+
+vector<double> Matrix::multiplyRow(double n, vector<double> r0) {
+    for(int e = 0; e < r0.size(); e++){
+        r0[e] = r0[e]*n;
+    }
+    return r0;
+}
+
+void Matrix::Gauss_Jordan(Matrix a) {
+    Matrix org = *this;
+    Matrix b = a;
+    if(org.rowNum != b.rowNum){ return;}
+
+    bool inverse = false;
+    if(a.isIdentity() && rowNum == b.rowNum && columnNum == b.columnNum){
+        if(determinant() == 0){ return;}
+        inverse = true;
+    }
+    if(!inverse && a.columnNum != 1){ return;}
+
+    int r = 0;
+    int c = 0;
+    int row0 = 0;
+    int row1 = 0;
+
+    org.print(b);
+
+    for(c = 0; c < org.columnNum; c++){
+        double biggest = 0;
+        for(r = 0+c; r < org.rowNum; r++){
+            double current = std::abs(org.elements[r][c]);
+            if(current > biggest){biggest = current; row1 = r;}
+        }
+        cout << "Swap: row " << row0 << " <-> row " << row1 << endl;
+        org.swapRows(row0, row1);
+        b.swapRows(row0, row1);
+        org.print(b);
+        cout << "Multiply row " << row0 << " with " << 1/org.getRow(row0)[c] << endl;
+        double mult = 1/org.getRow(row0)[c];
+        org.setRow(row0, multiplyRow(mult, org.getRow(row0)));
+        b.setRow(row0, multiplyRow(mult, b.getRow(row0)));
+        org.print(b);
+        for(r = 0; r < org.rowNum; r++){
+            if(r == row0){ continue;}
+            cout << "row " << r << " " << -org.getRow(r)[c] << " * row " << row0 << endl;
+            mult = -org.getRow(r)[c];
+            vector<double> temp = multiplyRow(mult,org.getRow(row0));
+            vector<double> temp1 = multiplyRow(mult, b.getRow(row0));
+            org.setRow(r, addingRows(org.getRow(r), temp));
+            b.setRow(r, addingRows(b.getRow(r), temp1));
+            org.print(b);
+            if(isNullRow(org.getRow(r)) && b.elements[r][0] != 0){ return;}
+        }
+        row0++;
+    }
 }

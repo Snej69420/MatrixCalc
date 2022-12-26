@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <algorithm>
 #include <cmath>
@@ -25,7 +26,11 @@ public:
     Matrix(int rows, int columns);
     Matrix(std::string json);
 
+    bool isEmpty();
+
+    void printHelp(int size, int r, Matrix a = {}, int sizeA = 0);
     void print();
+    void print(Matrix a);
 
     void set(int r, int c, double value);
     void setRow(int r, vector<double> row);
@@ -53,6 +58,8 @@ public:
     bool isSymmetric();
     bool isIdentity();
 
+    bool isNullRow(vector<double> r);
+
     bool operator==(Matrix b);
     bool operator!=(const Matrix& b);
     Matrix& operator=(const Matrix& b);
@@ -76,10 +83,16 @@ public:
 
     double determinant();
 
+    void swapRows(int r0, int r1);
+    vector<double> addingRows(vector<double> r0, vector<double> r1);
+    vector<double> multiplyRow(double  n, vector<double> r0);
+
+    void Gauss_Jordan(Matrix a);
+
 
 
 private:
-    int biggestElement();
+    unsigned int biggestElement();
 
     vector<vector<double>> elements;
     int rowNum;
