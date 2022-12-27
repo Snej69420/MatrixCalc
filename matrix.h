@@ -24,9 +24,9 @@ class Matrix {
 public:
     Matrix();
     Matrix(int rows, int columns);
-    Matrix(std::string json);
+    explicit Matrix(const std::string& json);
 
-    bool isEmpty();
+    bool isEmpty() const;
 
     void printHelp(int size, int r, Matrix a = {}, int sizeA = 0);
     void print();
@@ -87,7 +87,8 @@ public:
     vector<double> addingRows(vector<double> r0, vector<double> r1);
     vector<double> multiplyRow(double  n, vector<double> r0);
 
-    void Gauss_Jordan(Matrix a);
+    Matrix solveTriangular(Matrix a, Matrix b, bool upper = false);
+    Matrix Gauss_Jordan(Matrix a);
 
 
 

@@ -2,10 +2,11 @@
 #include "matrix.h"
 
 int main() {
-    Matrix a = Matrix("matrices/m1.json");
-    a.print();
+    Matrix a = Matrix("matrices/lower.json");
     Matrix b = Matrix(3,1);
-    b.setColumn(0, {5,4,8});
-    b.print();
-    a.Gauss_Jordan(b);
+    b.setColumn(0, {4,7,1});
+    a.print(b);
+    //a.Gauss_Jordan(b).print();
+
+    a.solveTriangular(a,b).print();
 }

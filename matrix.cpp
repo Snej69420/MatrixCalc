@@ -22,7 +22,7 @@ Matrix::Matrix(int row, int column){
     }
 }
 
-Matrix::Matrix(std::string json) {
+Matrix::Matrix(const std::string& json) {
     std::ifstream input(json); // lees de inputfile
     nlohmann::json j;
     input >> j;
@@ -37,18 +37,17 @@ Matrix::Matrix(std::string json) {
     if(rowNum == 1 || columnNum == 1){isVector = true;}
     int r = 0;
     int c = 0;
-    for(auto e : j["matrix"]){
+    for(const auto& e : j["matrix"]){
         c = 0;
-        for(auto e0 : e){
+        for(const auto& e0 : e){
             elements[r][c] = e0;
             c++;
         }
         r++;
     }
-    return;
-}
+    }
 
-bool Matrix::isEmpty() {
+bool Matrix::isEmpty() const {
     if(columnNum == 0 || rowNum == 0){
         return true;
     }
@@ -60,6 +59,7 @@ unsigned int Matrix::biggestElement() {
     std::string temp;
     for (int r = 0; r < rowNum; r++) {
         for (int c = 0; c < columnNum; c++) {
+            elements[r][c] += 0.0;
             std::ostringstream oss;
             oss << std::setprecision(8) << std::noshowpoint << elements[r][c];
             temp = oss.str();
@@ -170,9 +170,9 @@ bool Matrix::isDiagonallyDominant() {
             if(r == c){
                 continue;
             }
-            sum += abs(elements[r][c]);
+            sum += std::abs(elements[r][c]);
         }
-        if(abs(elements[r][r]) < sum){
+        if(std::abs(elements[r][r]) < sum){
             return false;
         }
     }
@@ -187,9 +187,9 @@ bool Matrix::isStrictlyDiagonallyDominant() {
             if(r == c){
                 continue;
             }
-            sum += abs(elements[r][c]);
+            sum += std::abs(elements[r][c]);
         }
-        if(abs(elements[r][r]) <= sum){
+        if(std::abs(elements[r][r]) <= sum){
             return false;
         }
     }
@@ -273,7 +273,7 @@ void Matrix::setRow(int r, vector<double> row) {
 
 void Matrix::setMatrix(vector<vector<double>> matrix) {
     if(matrix.size() != rowNum){ return;}
-    for(auto i : matrix){
+    for(const auto& i : matrix){
         if(i.size() != columnNum){ return;}
     }
     for(int r = 0; r < rowNum; r++){
@@ -578,17 +578,50 @@ vector<double> Matrix::multiplyRow(double n, vector<double> r0) {
     return r0;
 }
 
-void Matrix::Gauss_Jordan(Matrix a) {
+Matrix Matrix::solveTriangular(Matrix a, Matrix b, bool upper) {
+    int startRow = 0; int endRow = a.rowNum;
+    int startColumn = 0; int endColumn = a.columnNum;
+    if(upper){
+        startRow = -endRow+1; endRow = 1;
+        startColumn = -endColumn+1; endColumn = 1;
+    }
+    vector<double> result(b.rowNum, 0);
+
+    for(int r = startRow; r < endRow; r++){
+        result[abs(r)] = b.elements[abs(r)][0];
+        cout << "x" << abs(r) << " = " << b.elements[abs(r)][0];
+        for(int c = startColumn; c < endColumn; c++){
+            if(c > r){ break;}
+            if(c == r){
+                cout << endl << "x" << abs(r) << " = " << result[abs(r)]/a.elements[abs(r)][abs(c)] << endl;
+                result[abs(r)] = result[abs(r)]/a.elements[abs(r)][abs(c)];
+                break;
+            }
+            std::string oper = " + ";
+            if(-result[abs(c)]*a.elements[abs(r)][abs(c)] < 0){
+                oper = " - ";
+            }
+            cout << oper << std::abs(result[abs(c)]*a.elements[abs(r)][abs(c)]);
+            result[abs(r)] -= result[abs(c)]*a.elements[abs(r)][abs(c)];
+        }
+    }
+    Matrix res = Matrix(b.rowNum, b.columnNum);
+    res.setColumn(0, result);
+    return res;
+
+}
+
+Matrix Matrix::Gauss_Jordan(Matrix a) {
     Matrix org = *this;
     Matrix b = a;
-    if(org.rowNum != b.rowNum){ return;}
+    if(org.rowNum != b.rowNum){ return {};}
 
     bool inverse = false;
     if(a.isIdentity() && rowNum == b.rowNum && columnNum == b.columnNum){
-        if(determinant() == 0){ return;}
+        if(determinant() == 0){ return {};}
         inverse = true;
     }
-    if(!inverse && a.columnNum != 1){ return;}
+    if(!inverse && a.columnNum != 1){ return {};}
 
     int r = 0;
     int c = 0;
@@ -596,7 +629,8 @@ void Matrix::Gauss_Jordan(Matrix a) {
     int row1 = 0;
 
     org.print(b);
-
+    bool noSolution = false;
+    bool infiniteSolutions = false;
     for(c = 0; c < org.columnNum; c++){
         double biggest = 0;
         for(r = 0+c; r < org.rowNum; r++){
@@ -614,15 +648,45 @@ void Matrix::Gauss_Jordan(Matrix a) {
         org.print(b);
         for(r = 0; r < org.rowNum; r++){
             if(r == row0){ continue;}
-            cout << "row " << r << " " << -org.getRow(r)[c] << " * row " << row0 << endl;
+            std::string oper = " ";
+            if(-org.getRow(r)[c] >= 0){
+                oper = " + ";
+            }
+            cout << "row " << r << oper << -org.getRow(r)[c] << " * row " << row0 << endl;
             mult = -org.getRow(r)[c];
             vector<double> temp = multiplyRow(mult,org.getRow(row0));
             vector<double> temp1 = multiplyRow(mult, b.getRow(row0));
             org.setRow(r, addingRows(org.getRow(r), temp));
             b.setRow(r, addingRows(b.getRow(r), temp1));
             org.print(b);
-            if(isNullRow(org.getRow(r)) && b.elements[r][0] != 0){ return;}
+            if(isNullRow(org.getRow(r)) && b.elements[r][0] != 0){
+                noSolution = true;
+                break;
+            }
+            if(isNullRow(org.getRow(r)) && b.elements[r][0] == 0){
+                infiniteSolutions = true;
+                break;
+            }
         }
+        if(noSolution || infiniteSolutions){ break;}
         row0++;
+    }
+    if(noSolution){
+        cout << "This system has no solutions!" << endl;
+        return {};
+    }
+    if(infiniteSolutions){
+        cout << "This system has infinitely many solutions!" << endl;
+        return {};
+    }
+    if(inverse){return b;}
+    if(org.isDiagonal()){
+        return b;
+    }
+    if(org.isLowerTriangular()){
+        return solveTriangular(org, b);
+    }
+    if(org.isUpperTriangular()){
+        return solveTriangular(org, b, true);
     }
 }
