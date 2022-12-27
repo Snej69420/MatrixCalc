@@ -83,7 +83,7 @@ void Matrix::printHelp(int size, int r, Matrix a, int sizeA){
         for(int k = 0; k < remaining/2; k++){
             cout << " ";
         }
-        cout << elements[r][c];
+        cout << std::setprecision(8) << std::noshowpoint << elements[r][c];
         cout << " ";
         for(int k = 0; k < remaining/2; k++){
             cout << " ";
@@ -95,7 +95,7 @@ void Matrix::printHelp(int size, int r, Matrix a, int sizeA){
     }
     cout << "|";
     if(a.isEmpty()){ return;}
-    cout << " ";
+    cout << "| ";
     for (int c = 0; c < a.columnNum; c++) {
         std::ostringstream oss;
         oss << std::setprecision(8) << std::noshowpoint << a.elements[r][c];
