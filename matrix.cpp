@@ -614,20 +614,25 @@ Matrix Matrix::solveTriangular(Matrix a, Matrix b, bool upper) {
 Matrix Matrix::Gauss_Jordan(Matrix a) {
     Matrix org = *this;
     Matrix b = a;
-    if(org.rowNum != b.rowNum){ return {};}
+
+    bool echelonForm = false;
+    if(a.isEmpty()){ echelonForm = true;
+    }
+    if(org.rowNum != b.rowNum and not echelonForm){ return {};}
 
     bool inverse = false;
-    if(a.isIdentity() && rowNum == b.rowNum && columnNum == b.columnNum){
+    if(a.isIdentity() && rowNum == b.rowNum && columnNum == b.columnNum and !echelonForm){
         if(determinant() == 0){ return {};}
         inverse = true;
     }
-    if(!inverse && a.columnNum != 1){ return {};}
+    if(!inverse && a.columnNum != 1 && !echelonForm){ return {};}
 
     int r = 0;
     int c = 0;
     int row0 = 0;
     int row1 = 0;
 
+    std::cout << "Original: \n";
     org.print(b);
     bool noSolution = false;
     bool infiniteSolutions = false;
@@ -637,28 +642,28 @@ Matrix Matrix::Gauss_Jordan(Matrix a) {
             double current = std::abs(org.elements[r][c]);
             if(current > biggest){biggest = current; row1 = r;}
         }
-        cout << "Swap: row " << row0 << " <-> row " << row1 << endl;
+        if(printSteps) { cout << "Swap: row " << row0 << " <-> row " << row1 << endl; }
         org.swapRows(row0, row1);
         b.swapRows(row0, row1);
-        org.print(b);
-        cout << "Multiply row " << row0 << " with " << 1/org.getRow(row0)[c] << endl;
+        if(printSteps) { org.print(b); }
+        if(printSteps) {cout << "Multiply row " << row0 << " with " << 1/org.getRow(row0)[c] << endl;}
         double mult = 1/org.getRow(row0)[c];
         org.setRow(row0, multiplyRow(mult, org.getRow(row0)));
         b.setRow(row0, multiplyRow(mult, b.getRow(row0)));
-        org.print(b);
+        if(printSteps) { org.print(b); }
         for(r = 0; r < org.rowNum; r++){
             if(r == row0){ continue;}
             std::string oper = " ";
             if(-org.getRow(r)[c] >= 0){
                 oper = " + ";
             }
-            cout << "row " << r << oper << -org.getRow(r)[c] << " * row " << row0 << endl;
+            if(printSteps) { cout << "row " << r << oper << -org.getRow(r)[c] << " * row " << row0 << endl; }
             mult = -org.getRow(r)[c];
             vector<double> temp = multiplyRow(mult,org.getRow(row0));
             vector<double> temp1 = multiplyRow(mult, b.getRow(row0));
             org.setRow(r, addingRows(org.getRow(r), temp));
             b.setRow(r, addingRows(b.getRow(r), temp1));
-            org.print(b);
+            if(printSteps) { org.print(b); }
             if(isNullRow(org.getRow(r)) && b.elements[r][0] != 0){
                 noSolution = true;
                 break;
@@ -679,6 +684,10 @@ Matrix Matrix::Gauss_Jordan(Matrix a) {
         cout << "This system has infinitely many solutions!" << endl;
         return {};
     }
+    if(echelonForm){
+        std::cout << "Echelon form: \n";
+        return org;
+    }
     if(inverse){return b;}
     if(org.isDiagonal()){
         return b;
@@ -689,4 +698,8 @@ Matrix Matrix::Gauss_Jordan(Matrix a) {
     if(org.isUpperTriangular()){
         return solveTriangular(org, b, true);
     }
+}
+
+std::vector<std::vector<double>> Matrix::calculateColumnSpace() {
+
 }
