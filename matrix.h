@@ -26,7 +26,9 @@ public:
     /// Constructors
     Matrix();
     Matrix(int rows, int columns);
-    explicit Matrix(const std::string& json);
+    explicit Matrix(const std::string& file);
+
+    void saveToFile(const std::string& file);
 
     bool isEmpty() const;
 
@@ -88,7 +90,7 @@ public:
 
     Matrix createMinor(int r, int c);
 
-    double determinant();
+    double getDeterminant();
 
     /// row operations for Gauss Jordan Eliminations
     void swapRows(int r0, int r1);
@@ -107,9 +109,20 @@ private:
     unsigned int biggestElement();
 
     vector<vector<double>> elements;
-    int rowNum;
-    int columnNum;
+    int rowNum = 0;
+    int columnNum = 0;
     bool isVector;
+
+    double determinant = NAN;
+    vector<double> eigenValues;
+    vector<vector<double>> eigenVectors;
+    bool symmetric;
+    bool positiveDefinite;
+    bool positiveSemiDefinite;
+    bool negativeDefinite;
+    bool negativeSemiDefinite;
+    vector<double> singularValues;
+    vector<vector<double>> singularVectors;
 
     bool printSteps = false;
 };

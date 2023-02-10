@@ -22,8 +22,8 @@ Matrix::Matrix(int row, int column){
     }
 }
 
-Matrix::Matrix(const std::string& json) {
-    std::ifstream input(json); // lees de inputfile
+Matrix::Matrix(const std::string& file) {
+    std::ifstream input(file); // lees de inputfile
     nlohmann::json j;
     input >> j;
     if(j["type"] != "matrix"){
@@ -31,21 +31,57 @@ Matrix::Matrix(const std::string& json) {
     }
     rowNum = j["rows"];
     columnNum = j["columns"];
-    vector<double> t0(columnNum, 0);
-    elements = vector<vector<double>>(rowNum, t0);
     isVector = false;
     if(rowNum == 1 || columnNum == 1){isVector = true;}
-    int r = 0;
-    int c = 0;
-    for(const auto& e : j["matrix"]){
-        c = 0;
-        for(const auto& e0 : e){
-            elements[r][c] = e0;
-            c++;
-        }
-        r++;
+    elements = j["matrix"].get<vector<vector<double>>>();
+
+    // optional
+    if(!j.contains("optional")){
+        return;
     }
+    auto o = j["optional"];
+    if(o["determinant"].empty()){
+        determinant = NAN;
+    }else{
+        determinant = o["determinant"].get<double>();
     }
+    eigenValues = o["eigenValues"].get<vector<double>>();
+    eigenVectors = o["eigenVectors"].get<vector<vector<double>>>();
+    symmetric = o["symmetric"];
+    positiveDefinite = o["positiveDefinite"];
+    positiveSemiDefinite = o["positiveSemiDefinite"];
+    negativeDefinite = o["negativeDefinite"];
+    negativeSemiDefinite = o["negativeSemiDefinite"];
+    singularValues = o["singularValues"].get<vector<double>>();;
+    singularVectors = o["singularVectors"].get<vector<vector<double>>>();
+
+}
+
+void Matrix::saveToFile(const std::string &file) {
+    std::ofstream input(file); // lees de inputfile
+    nlohmann::json j;
+    j["type"] = "matrix";
+    j["rows"] = rowNum;
+    j["columns"] = columnNum;
+
+    j["matrix"] = elements;
+
+    // optional
+
+
+    j["optional"]["determinant"] = determinant;
+    j["optional"]["eigenValues"] = eigenValues;
+    j["optional"]["eigenVectors"] = eigenVectors;
+    j["optional"]["symmetric"] = symmetric;
+    j["optional"]["positiveDefinite"] = positiveDefinite;
+    j["optional"]["positiveSemiDefinite"] = positiveSemiDefinite;
+    j["optional"]["negativeDefinite"] = negativeDefinite;
+    j["optional"]["negativeSemiDefinite"] = negativeSemiDefinite;
+    j["optional"]["singularValues"] = singularValues;
+    j["optional"]["singularVectors"] = singularVectors;
+    input << std::setw(4) << j;
+    input.close();
+}
 
 bool Matrix::isEmpty() const {
     if(columnNum == 0 || rowNum == 0){
@@ -380,6 +416,9 @@ Matrix Matrix::operator-(const Matrix& b){
 Matrix Matrix::operator*(const Matrix& b){
     if(columnNum != b.rowNum){return {};}
     Matrix res = Matrix(rowNum, b.columnNum);
+    if(!isnanl(determinant) && !isnanl(b.determinant)){
+        res.determinant = determinant*b.determinant;
+    }
     for(int r = 0; r < rowNum; r++){
         for(int c = 0; c < b.columnNum; c++){
             res.elements[r][c] += inproduct(getRow(r), b.getColumn(c));
@@ -390,6 +429,9 @@ Matrix Matrix::operator*(const Matrix& b){
 
 Matrix Matrix::operator*(double b){
     Matrix res(rowNum, columnNum);
+    if(!isnanl(determinant)){
+        res.determinant = b * determinant;
+    }
     for(int r = 0; r < rowNum; r++){
         for(int c = 0; c < columnNum; c++){
             res.elements[r][c] = elements[r][c]*b;
@@ -481,7 +523,7 @@ Matrix Matrix::power(unsigned int b){
 }
 
 int Matrix::findZerosRow() {
-    int e = -1;
+    int e = 0;
     int zeros = 0;
     for(int r = 0; r < rowNum; r++){
         int temp = 0;
@@ -494,7 +536,7 @@ int Matrix::findZerosRow() {
 }
 
 int Matrix::findZerosColumn() {
-    int e = -1;
+    int e = 0;
     int zeros = 0;
     for(int c = 0; c < columnNum; c++){
         int temp = 0;
@@ -521,16 +563,19 @@ Matrix Matrix::createMinor(int r, int c) {
     return minor;
 }
 
-double Matrix::determinant() {
+double Matrix::getDeterminant() {
+    if(!isnanl(determinant)){
+        return determinant;
+    }
     if(!isSquare()){return {};}
-    double res = 0;
+    determinant = 0;
     if(isDiagonal() || isUpperTriangular() || isLowerTriangular()){
         vector<double> diagonal = getDiagonal();
-        res = diagonal[0];
+        determinant = diagonal[0];
         for(int e = 1; e < diagonal.size(); e++){
-            res *= diagonal[e];
+            determinant *= diagonal[e];
         }
-        return res;
+        return determinant;
     }
     if(rowNum == 2 & columnNum == 2){
         return elements[0][0]*elements[1][1]-elements[1][0]*elements[0][1];
@@ -545,14 +590,14 @@ double Matrix::determinant() {
     }
     if(row){
         for(int e = 0; e < r0.size(); e++){
-            res += elements[r][e]*pow(-1, r+e)* createMinor(r, e).determinant();
+            determinant += elements[r][e]*pow(-1, r+e)* createMinor(r, e).getDeterminant();
         }
-        return res;
+        return determinant;
     }
     for(int e = 0; e < c0.size(); e++){
-        res += elements[e][c]*pow(-1, c+e)* createMinor(e,c).determinant();
+        determinant += elements[e][c]*pow(-1, c+e)* createMinor(e, c).getDeterminant();
     }
-    return res;
+    return determinant;
 
 }
 
@@ -622,7 +667,7 @@ Matrix Matrix::Gauss_Jordan(Matrix a) {
 
     bool inverse = false;
     if(a.isIdentity() && rowNum == b.rowNum && columnNum == b.columnNum and !echelonForm){
-        if(determinant() == 0){ return {};}
+        if(getDeterminant() == 0){ return {};}
         inverse = true;
     }
     if(!inverse && a.columnNum != 1 && !echelonForm){ return {};}

@@ -2,5 +2,18 @@
   "type": "matrix",
   "rows": 3,
   "columns": 3,
-  "matrix": [[1,0,0],[3,1,0],[4,6,1]]
+  "matrix": [[1,0,0],[3,1,0],[4,6,1]],
+
+  "optional": {
+    "determinant": null,
+    "eigenValues": [],
+    "eigenVectors": [],
+    "symmetric": false,
+    "positiveDefinite": false,
+    "positiveSemiDefinite": false,
+    "negativeDefinite": false,
+    "negativeSemiDefinite": false,
+    "singularValues": [],
+    "singularVectors": []
+  }
 }
