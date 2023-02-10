@@ -4,6 +4,17 @@
 
 #include "matrix.h"
 
+void printVector(std::vector<double> v){
+    std::cout << "[";
+    for(auto e : v){
+        std::cout << e;
+        if(e != v.back()){
+            std::cout << ", ";
+        }
+    }
+    std::cout << "]\n";
+}
+
 Matrix::Matrix() {
     rowNum = 0;
     columnNum = 0;
@@ -174,6 +185,27 @@ void Matrix::print(Matrix a) {
         cout << endl;
     }
     cout << endl;
+}
+
+void Matrix::info() {
+    print();
+    std::cout << "Determinant:" <<  determinant << "\n";
+    std::cout << "Eigenvalues:\n";
+    printVector(eigenValues);
+    std::cout << "Eigenvectors:\n";
+    Matrix t0;
+    t0.setMatrix(eigenVectors);
+    t0.print();
+    std::cout <<  symmetric << "\n";
+    std::cout <<  positiveDefinite << "\n";
+    std::cout <<  positiveSemiDefinite << "\n";
+    std::cout <<  negativeDefinite << "\n";
+    std::cout <<  negativeSemiDefinite << "\n";
+    std::cout << "\nSingularvalues:\n";
+    printVector(singularValues);
+    t0.setMatrix(singularVectors);
+    std::cout << "Singularvectors:\n";
+    t0.print();
 }
 
 bool Matrix::isSquare() const {

@@ -36,6 +36,7 @@ public:
     void printHelp(int size, int r, Matrix a = {}, int sizeA = 0);
     void print();
     void print(Matrix a);
+    void info();
 
     /// functions to set rows, columns, ... in the matrix
     void set(int r, int c, double value);
