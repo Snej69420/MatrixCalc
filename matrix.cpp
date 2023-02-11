@@ -189,8 +189,8 @@ void Matrix::print(Matrix a) {
 
 void Matrix::info() {
     print();
-    std::cout << "Determinant:" <<  determinant << "\n";
-    std::cout << "Eigenvalues:\n";
+    std::cout << "Determinant: " <<  determinant << "\n";
+    std::cout << "Eigenvalues: ";
     printVector(eigenValues);
     std::cout << "Eigenvectors:\n";
     Matrix t0;
@@ -201,7 +201,7 @@ void Matrix::info() {
     std::cout <<  positiveSemiDefinite << "\n";
     std::cout <<  negativeDefinite << "\n";
     std::cout <<  negativeSemiDefinite << "\n";
-    std::cout << "\nSingularvalues:\n";
+    std::cout << "\nSingularvalues: ";
     printVector(singularValues);
     t0.setMatrix(singularVectors);
     std::cout << "Singularvectors:\n";
@@ -347,6 +347,22 @@ void Matrix::setMatrix(vector<vector<double>> matrix) {
     for(int r = 0; r < rowNum; r++){
         for(int c = 0; c < columnNum; c++){
             elements[r][c] = matrix[r][c];
+        }
+    }
+}
+
+void Matrix::generateMatrix(int rows, int columns) {
+    int lower_bound = -100;
+    int upper_bound = 100;
+    vector<double> t (columns, 0);
+    vector<vector<double>> v (rows, t);
+    elements = v;
+    columnNum = columns; rowNum = rows;
+    std::uniform_int_distribution<int> unif(lower_bound,upper_bound);
+    std::default_random_engine re;
+    for(int r = 0; r < rows; r++){
+        for(int c = 0; c < columns; c++){
+            elements[r][c] = unif(re);
         }
     }
 }
@@ -595,11 +611,21 @@ Matrix Matrix::createMinor(int r, int c) {
     return minor;
 }
 
+static std::mutex determinantMutex;
+
+void Matrix::helpDeterminant( int x, int y){
+    double d = elements[x][y]*pow(-1, x+y)* createMinor(x, y).getDeterminant();
+    std::lock_guard<std::mutex> lock(determinantMutex);
+    determinant += d;
+}
+
 double Matrix::getDeterminant() {
+    vector<std::future<void>> determinantMT;
+
     if(!isnanl(determinant)){
         return determinant;
     }
-    if(!isSquare()){return {};}
+    if(!isSquare()){return NAN;}
     determinant = 0;
     if(isDiagonal() || isUpperTriangular() || isLowerTriangular()){
         vector<double> diagonal = getDiagonal();
@@ -622,11 +648,13 @@ double Matrix::getDeterminant() {
     }
     if(row){
         for(int e = 0; e < r0.size(); e++){
+            //determinantMT.push_back(std::async(std::launch::async, &Matrix::helpDeterminant, this, r, e));
             determinant += elements[r][e]*pow(-1, r+e)* createMinor(r, e).getDeterminant();
         }
         return determinant;
     }
     for(int e = 0; e < c0.size(); e++){
+        //determinantMT.push_back(std::async(std::launch::async, &Matrix::helpDeterminant, this, e, c));
         determinant += elements[e][c]*pow(-1, c+e)* createMinor(e, c).getDeterminant();
     }
     return determinant;

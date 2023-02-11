@@ -12,6 +12,8 @@
 #include <fstream>
 #include <algorithm>
 #include <cmath>
+#include <random>
+#include <future>
 #include "json.hpp"
 
 
@@ -44,6 +46,7 @@ public:
     void setColumn(int c, vector<double> column);
     void setDiagonal(vector<double> diagonal);
     void setMatrix(vector<vector<double>> matrix);
+    void generateMatrix(int rows, int columns);
 
     void makeIdentity();
 
@@ -91,6 +94,7 @@ public:
 
     Matrix createMinor(int r, int c);
 
+    void helpDeterminant(int x, int y);
     double getDeterminant();
 
     /// row operations for Gauss Jordan Eliminations
