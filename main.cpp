@@ -4,7 +4,7 @@
 
 int main() {
     Matrix a;
-    a.generateMatrix(5,5);
+    a.generateMatrix(11,11);
     a.print();
     auto start = std::chrono::high_resolution_clock::now();
     std::cout << "Determinant " << a.getDeterminant() << std::endl;

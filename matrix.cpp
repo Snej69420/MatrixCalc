@@ -63,7 +63,7 @@ Matrix::Matrix(const std::string& file) {
     positiveSemiDefinite = o["positiveSemiDefinite"];
     negativeDefinite = o["negativeDefinite"];
     negativeSemiDefinite = o["negativeSemiDefinite"];
-    singularValues = o["singularValues"].get<vector<double>>();;
+    singularValues = o["singularValues"].get<vector<double>>();
     singularVectors = o["singularVectors"].get<vector<vector<double>>>();
 
 }
@@ -351,20 +351,48 @@ void Matrix::setMatrix(vector<vector<double>> matrix) {
     }
 }
 
-void Matrix::generateMatrix(int rows, int columns) {
-    int lower_bound = -100;
-    int upper_bound = 100;
-    vector<double> t (columns, 0);
-    vector<vector<double>> v (rows, t);
+void Matrix::generateMatrix(int rows, int columns, type t) {
+    double lower_bound = -1;
+    double upper_bound = 1;
+    vector<double> temp (columns, 0);
+    vector<vector<double>> v (rows, temp);
     elements = v;
+
+    int limitR, limitC;
     columnNum = columns; rowNum = rows;
-    std::uniform_int_distribution<int> unif(lower_bound,upper_bound);
+    std::uniform_real_distribution<double> unif(lower_bound,upper_bound);
     std::default_random_engine re;
-    for(int r = 0; r < rows; r++){
-        for(int c = 0; c < columns; c++){
-            elements[r][c] = unif(re);
-        }
+
+    switch (t) {
+        case Diagonal:
+            for(int r = 0; r < rows; r++){
+                    elements[r][r] = unif(re);
+            }
+            return;
+        case Lower:
+            for(int r = 0; r < rows; r++){
+                for(int c = 0; c < r+1; c++){
+                    elements[r][c] = unif(re);
+                }
+            }
+            return;
+        case Upper:
+            for(int r = 0; r < rows; r++){
+                for(int c = 0+r; c < columns; c++){
+                    elements[r][c] = unif(re);
+                }
+            }
+            return;
+        case Full:
+            for(int r = 0; r < rows; r++){
+                for(int c = 0; c < columns; c++){
+                    elements[r][c] = unif(re);
+                }
+            }
+            return;
     }
+
+
 }
 
 void Matrix::makeIdentity() {
@@ -570,7 +598,7 @@ Matrix Matrix::power(unsigned int b){
 
 }
 
-int Matrix::findZerosRow() {
+std::pair<int, int> Matrix::findZerosRow() {
     int e = 0;
     int zeros = 0;
     for(int r = 0; r < rowNum; r++){
@@ -580,10 +608,10 @@ int Matrix::findZerosRow() {
         }
         if(temp > zeros){zeros = temp; e = r;}
     }
-    return e;
+    return {e, zeros};
 }
 
-int Matrix::findZerosColumn() {
+std::pair<int, int> Matrix::findZerosColumn() {
     int e = 0;
     int zeros = 0;
     for(int c = 0; c < columnNum; c++){
@@ -593,7 +621,7 @@ int Matrix::findZerosColumn() {
         }
         if(temp > zeros){zeros = temp; e = c;}
     }
-    return e;
+    return {e, zeros};
 }
 
 Matrix Matrix::createMinor(int r, int c) {
@@ -611,23 +639,16 @@ Matrix Matrix::createMinor(int r, int c) {
     return minor;
 }
 
-static std::mutex determinantMutex;
-
-void Matrix::helpDeterminant( int x, int y){
-    double d = elements[x][y]*pow(-1, x+y)* createMinor(x, y).getDeterminant();
-    std::lock_guard<std::mutex> lock(determinantMutex);
-    determinant += d;
-}
-
 double Matrix::getDeterminant() {
-    vector<std::future<void>> determinantMT;
 
     if(!isnanl(determinant)){
         return determinant;
     }
     if(!isSquare()){return NAN;}
+
     determinant = 0;
-    if(isDiagonal() || isUpperTriangular() || isLowerTriangular()){
+
+    if(isDiagonal() || isLowerTriangular() || isUpperTriangular()){
         vector<double> diagonal = getDiagonal();
         determinant = diagonal[0];
         for(int e = 1; e < diagonal.size(); e++){
@@ -635,26 +656,28 @@ double Matrix::getDeterminant() {
         }
         return determinant;
     }
+
     if(rowNum == 2 & columnNum == 2){
         return elements[0][0]*elements[1][1]-elements[1][0]*elements[0][1];
     }
-    int r = findZerosRow();
-    int c = findZerosColumn();
+    std::pair<int, int> p0 = findZerosRow();
+    std::pair<int, int> p1 = findZerosColumn();
+    int r = p0.first;
+    int c = p1.first;
     vector<double> r0, c0;
     r0 = getRow(r); c0 = getColumn(c);
     bool row = true;
-    if(count(r0.begin(), r0.end(), 0) < count(c0.begin(), c0.end(), 0)){
+    if(p0.second < p1.second){
         row = false;
     }
+
     if(row){
         for(int e = 0; e < r0.size(); e++){
-            //determinantMT.push_back(std::async(std::launch::async, &Matrix::helpDeterminant, this, r, e));
             determinant += elements[r][e]*pow(-1, r+e)* createMinor(r, e).getDeterminant();
         }
         return determinant;
     }
     for(int e = 0; e < c0.size(); e++){
-        //determinantMT.push_back(std::async(std::launch::async, &Matrix::helpDeterminant, this, e, c));
         determinant += elements[e][c]*pow(-1, c+e)* createMinor(e, c).getDeterminant();
     }
     return determinant;

@@ -41,12 +41,14 @@ public:
     void info();
 
     /// functions to set rows, columns, ... in the matrix
+    enum type{Lower, Upper, Diagonal, Full};
+
     void set(int r, int c, double value);
     void setRow(int r, vector<double> row);
     void setColumn(int c, vector<double> column);
     void setDiagonal(vector<double> diagonal);
     void setMatrix(vector<vector<double>> matrix);
-    void generateMatrix(int rows, int columns);
+    void generateMatrix(int rows, int columns, type t = Full);
 
     void makeIdentity();
 
@@ -72,8 +74,8 @@ public:
     bool isIdentity();
 
     bool isNullRow(vector<double> r);
-    int findZerosRow();
-    int findZerosColumn();
+    std::pair<int, int> findZerosRow();
+    std::pair<int, int> findZerosColumn();
 
     /// standard operations
     bool operator==(Matrix b);
@@ -94,7 +96,6 @@ public:
 
     Matrix createMinor(int r, int c);
 
-    void helpDeterminant(int x, int y);
     double getDeterminant();
 
     /// row operations for Gauss Jordan Eliminations
@@ -121,11 +122,11 @@ private:
     double determinant = NAN;
     vector<double> eigenValues;
     vector<vector<double>> eigenVectors;
-    bool symmetric;
-    bool positiveDefinite;
-    bool positiveSemiDefinite;
-    bool negativeDefinite;
-    bool negativeSemiDefinite;
+    bool symmetric{};
+    bool positiveDefinite{};
+    bool positiveSemiDefinite{};
+    bool negativeDefinite{};
+    bool negativeSemiDefinite{};
     vector<double> singularValues;
     vector<vector<double>> singularVectors;
 
