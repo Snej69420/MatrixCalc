@@ -352,8 +352,8 @@ void Matrix::setMatrix(vector<vector<double>> matrix) {
 }
 
 void Matrix::generateMatrix(int rows, int columns, type t) {
-    double lower_bound = -1;
-    double upper_bound = 1;
+    double lower_bound = -10000;
+    double upper_bound = 10000;
     vector<double> temp (columns, 0);
     vector<vector<double>> v (rows, temp);
     elements = v;
